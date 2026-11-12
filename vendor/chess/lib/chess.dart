@@ -220,6 +220,27 @@ class Chess {
     return count;
   }
 
+  final List<_NullMoveState> _nullMoves = [];
+
+  /// Passes the turn without moving, for null-move pruning. Must not be used in check.
+  void make_null_move() {
+    _nullMoves.add(_NullMoveState(ep_square, half_moves, zobrist));
+    zobrist ^= _zobristSide ^ _epKey(ep_square);
+    ep_square = EMPTY;
+    // Positions before a null move can't legally recur after it.
+    half_moves = 0;
+    turn = swap_color(turn);
+  }
+
+  /// Undoes the last [make_null_move].
+  void undo_null_move() {
+    final saved = _nullMoves.removeLast();
+    ep_square = saved.ep_square;
+    half_moves = saved.half_moves;
+    zobrist = saved.zobrist;
+    turn = swap_color(turn);
+  }
+
   /// Whether [move] (SAN string, move Map, or Move) captures a piece in the current position.
   bool is_capture(move) => _resolve_move(move)?.captured != null;
 
@@ -1809,6 +1830,13 @@ class Move {
   String get toAlgebraic {
     return Chess.algebraic(to);
   }
+}
+
+class _NullMoveState {
+  final int? ep_square;
+  final int half_moves;
+  final int zobrist;
+  const _NullMoveState(this.ep_square, this.half_moves, this.zobrist);
 }
 
 class State {
