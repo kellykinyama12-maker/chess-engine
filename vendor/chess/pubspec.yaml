@@ -1,0 +1,11 @@
+name: chess
+version: 0.8.1
+description: A library for legal chess move generation, maintenance of chess game state, and conversion to and from the formats FEN and PGN.
+homepage: https://github.com/davecom/chess.dart
+dev_dependencies:
+  benchmark_harness: ^2.0.0
+  test: ^1.17.8
+  pedantic: ^1.11.0
+environment:
+  sdk: '>=2.12.0 <4.0.0'
+
