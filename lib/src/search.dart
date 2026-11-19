@@ -398,7 +398,7 @@ String _pvToSan(Chess position, List<Move> pv) {
 
 void main() {
   Chess chess = Chess();
-  for (int x = 0; x < 8; x++) {
+  for (int x = 0; x < 250; x++) {
     if (chess.game_over) break;
     print('position:  ${chess.fen}');
     // print("Evaluation: ${eval(chess,chess.turn)}");
@@ -406,7 +406,7 @@ void main() {
     print(chess.ascii);
     var moves = iterativeDeepening(
       chess,
-      2,
+      10,
       timeLimit: const Duration(seconds: 5),
     );
     // print("Moves: ${moves}");

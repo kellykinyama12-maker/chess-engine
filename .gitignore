@@ -5,3 +5,20 @@
 # Local run output
 *.log
 out.txt
+
+# CMake build artifacts
+cpp/build/
+cpp/build_debug/
+cpp/build_opt/
+cpp/*.exe
+cpp/*.o
+cpp/*.obj
+*.a
+*.lib
+
+# Temporary files
+cpp/2x
+*.swp
+*.swo
+*~
+.DS_Store
