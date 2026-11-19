@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\projects\chess_research\chess-engine\cpp\build_phase6a\CMakeFiles\22859cfe97a1a2ede20d6fdc912991a8\RUN_TESTS_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{2920AC24-9A1F-36B8-9CB3-23A18503201D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

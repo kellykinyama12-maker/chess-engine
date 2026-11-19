@@ -1,0 +1,1 @@
+C:\projects\chess_research\chess-engine\cpp\build_phase6a\chess_core.dir\Release\chess_core.lib

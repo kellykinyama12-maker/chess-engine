@@ -25,6 +25,13 @@ constexpr double REWARD_SCALING = 203.77396313709564;
 // Forward declarations
 class Position;
 
+// Phase 6C: Alpha-Beta node types for typed search
+enum class NodeType {
+    pv = 0,   // Exact (searched inside the window)
+    all = 1,  // Upper bound (failed low)
+    cut = 2   // Lower bound (failed high)
+};
+
 // Edge: Represents a move and its associated statistics
 struct Edge {
     Move move;
@@ -35,6 +42,15 @@ struct Edge {
 
     Edge() = default;
     Edge(Move m, double p = 0.0) : move(m), prior(p) {}
+};
+
+// Phase 6C: TypedEdge extends Edge with node type tracking
+struct TypedEdge : public Edge {
+    NodeType type = NodeType::pv;  // Alpha-beta node type
+
+    TypedEdge() = default;
+    TypedEdge(Move m, double p = 0.0, NodeType t = NodeType::pv)
+        : Edge(m, p), type(t) {}
 };
 
 // Node: Represents a position in the search tree
@@ -123,4 +139,88 @@ inline int reward_to_value(double reward) {
     if (reward > 0.99) return 10000;
     if (reward < 0.01) return -10000;
     return static_cast<int>(REWARD_SCALING * std::log(reward / (1.0 - reward)));
+}
+
+// Phase 6D: Transposition Table (TT) for caching evaluated positions
+// Stores exact values and bounds to avoid re-searching the same positions
+
+// TranspositionEntry: Single cache entry storing position evaluation
+struct TranspositionEntry {
+    uint64_t key = 0;              // Zobrist hash for position verification
+    int depth = 0;                 // Search depth remaining when stored
+    double value = 0.0;            // Cached node value (reward: 0.0-1.0)
+    NodeType type = NodeType::pv;  // Entry type: pv (exact), all (upper bound), cut (lower bound)
+    uint32_t timestamp = 0;        // Age for replacement strategy
+
+    TranspositionEntry() = default;
+    TranspositionEntry(uint64_t k, int d, double v, NodeType t, uint32_t ts)
+        : key(k), depth(d), value(v), type(t), timestamp(ts) {}
+};
+
+// TranspositionTable: Hash table for caching position evaluations
+class TranspositionTable {
+public:
+    static constexpr size_t DEFAULT_SIZE = 16777216;  // 16M entries (~384 MB with entries)
+    static constexpr size_t BUCKET_SIZE = 4;          // 4-way associative
+
+    explicit TranspositionTable(size_t size = DEFAULT_SIZE);
+    ~TranspositionTable() = default;
+
+    // Probe: Check if position is cached and applicable for current search
+    TranspositionEntry* probe(uint64_t key, int depth);
+
+    // Store: Cache a position evaluation
+    void store(uint64_t key, int depth, double value, NodeType type);
+
+    // Check if cached entry can be used for alpha-beta cutoff
+    bool can_use_entry(const TranspositionEntry* entry, int depth, 
+                       double alpha, double beta) const;
+
+    // Statistics
+    uint64_t get_hits() const { return hits_; }
+    uint64_t get_probes() const { return probes_; }
+    uint64_t get_stores() const { return stores_; }
+    double get_hit_rate() const {
+        return probes_ > 0 ? (100.0 * hits_ / probes_) : 0.0;
+    }
+
+    void print_stats() const;
+    void clear();
+    size_t size() const { return table_.size(); }
+
+private:
+    struct Bucket {
+        TranspositionEntry entries[BUCKET_SIZE];
+        uint8_t count = 0;  // Number of valid entries in bucket
+    };
+
+    std::vector<Bucket> table_;
+    uint32_t generation_ = 0;  // Current generation/timestamp
+    uint64_t hits_ = 0;        // Cache hits count
+    uint64_t probes_ = 0;      // Total probes count
+    uint64_t stores_ = 0;      // Total stores count
+
+    // Find entry in bucket, returns index or -1 if not found
+    int find_entry_in_bucket(const Bucket& bucket, uint64_t key) const;
+
+    // Find replacement slot in bucket (-1 if bucket full, use oldest)
+    int find_replacement_slot(Bucket& bucket) const;
+};
+
+// Transposition table utility: Bounds checking for cutoff decision
+inline bool TranspositionTable::can_use_entry(const TranspositionEntry* entry, 
+                                               int depth, 
+                                               double alpha, double beta) const {
+    if (!entry || entry->depth < depth) return false;
+
+    switch (entry->type) {
+        case NodeType::pv:
+            return true;  // Exact value, always usable
+        case NodeType::all:
+            return entry->value <= alpha;  // Upper bound, fail-low cutoff
+        case NodeType::cut:
+            return entry->value >= beta;   // Lower bound, fail-high cutoff
+        default:
+            return false;
+    }
 }

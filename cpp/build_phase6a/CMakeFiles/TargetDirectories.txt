@@ -1,0 +1,8 @@
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/chess_core.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/mcts_engine.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/chess_engine.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/chess_engine_test.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/RUN_TESTS.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/INSTALL.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/ALL_BUILD.dir
+C:/projects/chess_research/chess-engine/cpp/build_phase6a/CMakeFiles/ZERO_CHECK.dir

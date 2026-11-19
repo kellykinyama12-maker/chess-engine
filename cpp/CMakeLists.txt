@@ -53,6 +53,7 @@ set(CHESS_SOURCES
 set(MCTS_SOURCES
     src/mcts_new.cpp
     src/thread_pool.cpp
+    src/uci.cpp
 )
 
 set(ALL_SOURCES ${CHESS_SOURCES} ${MCTS_SOURCES})
@@ -79,6 +80,14 @@ target_include_directories(chess_engine PRIVATE
 target_link_libraries(chess_engine chess_core mcts_engine)
 target_compile_features(chess_engine PRIVATE cxx_std_17)
 
+# UCI executable for chess GUI compatibility
+add_executable(chess_engine_uci src/uci_main.cpp)
+target_include_directories(chess_engine_uci PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
+target_link_libraries(chess_engine_uci chess_core mcts_engine)
+target_compile_features(chess_engine_uci PRIVATE cxx_std_17)
+
 # Optional: Tests executable
 option(BUILD_TESTS "Build test suite" ON)
 if(BUILD_TESTS)
@@ -95,7 +104,7 @@ if(BUILD_TESTS)
 endif()
 
 # Installation
-install(TARGETS chess_engine
+install(TARGETS chess_engine chess_engine_uci
     RUNTIME DESTINATION bin
 )
 

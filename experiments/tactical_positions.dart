@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:chess/chess.dart';
 import 'package:chess_engine/src/mcts_new.dart' as mcts;
+import 'package:chess_engine/src/mcts_prior.dart' as typed;
 import 'package:chess_engine/src/search.dart' as ab;
 import 'package:chess_engine/src/search_forcing.dart' as forcing;
 import 'package:chess_engine/src/search_tactical.dart' as tac;
@@ -54,10 +55,16 @@ Future<List<Iteration>> _search(String engine, String fen, int ms, String config
       final limit = Duration(milliseconds: ms);
       if (engine == 'regular') {
         ab.iterativeDeepening(chess, 63, timeLimit: limit);
-      } else if (engine.startsWith('mcts')) {
-        // mcts<priorMs>, e.g. mcts50: simulations until the time limit, reported every 25.
-        final priorMs = int.tryParse(engine.substring(4)) ?? 50;
-        final mc = mcts.MonteCarlo()
+      } else if (engine.startsWith('mcts') || engine.startsWith('typed')) {
+        // mcts<priorMs> or typed<priorMs>[w<workers>] (node-typed priors, mcts_prior.dart),
+        // e.g. typed150w8: simulations until the time limit, reported every 25.
+        final m = RegExp(r'^(mcts|typed)(\d*)(?:w(\d+))?$').firstMatch(engine)!;
+        final priorMs = int.tryParse(m[2]!) ?? 50;
+        final workers = m[3] == null ? 1 : int.parse(m[3]!);
+        final pool = workers > 1 ? await typed.TypedPriorPool.spawn(workers) : null;
+        final mc = (m[1] == 'typed'
+            ? (typed.TypedMonteCarlo()..typedPool = pool)
+            : mcts.MonteCarlo())
           ..position = chess
           ..priorTimeLimit = Duration(milliseconds: priorMs);
         final sw = Stopwatch()..start();
@@ -74,6 +81,7 @@ Future<List<Iteration>> _search(String engine, String fen, int ms, String config
           if (++sims % 25 == 0) report();
         }
         report();
+        pool?.close();
       } else if (engine.startsWith('forcing')) {
         // forcing<runs>[c<checks>], e.g. forcing2c1: at most 2 quiet runs and 1 non-capturing check per line.
         final m = RegExp(r'^forcing(\d*)(?:c(\d+))?$').firstMatch(engine)!;
@@ -165,7 +173,12 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  await Future.wait([for (var i = 0; i < min(16, jobs.length); i++) worker()]);
+  // Engines with worker isolates (w<N>) leave fewer cores for parallel positions.
+  final maxWorkers = engines
+      .map((e) => int.tryParse(RegExp(r'w(\d+)$').firstMatch(e)?[1] ?? '') ?? 1)
+      .reduce(max);
+  final concurrency = max(1, 16 ~/ maxWorkers);
+  await Future.wait([for (var i = 0; i < min(concurrency, jobs.length); i++) worker()]);
 
   print('$ms ms per position, tactical config "${config.isEmpty ? 'defaults' : config}"');
   final solved = {for (final e in engines) e: 0};

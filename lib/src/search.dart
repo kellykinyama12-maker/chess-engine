@@ -155,6 +155,9 @@ class _TTEntry {
 /// Transposition table for [negamax], keyed by Zobrist hash; cleared by [resetSearchState].
 final Map<int, _TTEntry> _tt = {};
 
+/// When false, [negamax] never reads [_tt] (no cutoffs, no TT move ordering).
+bool ttLookup = true;
+
 /// Converts a mate score at [ply] to be relative to the node, for storing in a TT.
 int scoreToTT(int score, int ply) {
   if (!isMateScore(score) || score.abs() > mateScore) return score;
@@ -202,7 +205,7 @@ int negamax(Chess position, int depth, int alpha, int beta, {int ply = 0}) {
     return qsearch(position, depth, alpha, beta, ply: ply);
   }
 
-  final entry = _tt[position.zobrist];
+  final entry = ttLookup ? _tt[position.zobrist] : null;
   // No cutoffs along the previous PV, so the best line is rebuilt in full.
   if (entry != null && entry.depth >= depth && !_followPv) {
     final s = scoreFromTT(entry.score, ply);

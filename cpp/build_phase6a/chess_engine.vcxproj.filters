@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\projects\chess_research\chess-engine\cpp\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\projects\chess_research\chess-engine\cpp\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="C:\projects\chess_research\chess-engine\cpp\build_phase6a\chess_core.dir\$(Configuration)\position.obj">
+      <Filter>Object Libraries</Filter>
+    </Object>
+    <Object Include="C:\projects\chess_research\chess-engine\cpp\build_phase6a\chess_core.dir\$(Configuration)\move_gen.obj">
+      <Filter>Object Libraries</Filter>
+    </Object>
+    <Object Include="C:\projects\chess_research\chess-engine\cpp\build_phase6a\chess_core.dir\$(Configuration)\zobrist.obj">
+      <Filter>Object Libraries</Filter>
+    </Object>
+    <Object Include="C:\projects\chess_research\chess-engine\cpp\build_phase6a\mcts_engine.dir\$(Configuration)\mcts_new.obj">
+      <Filter>Object Libraries</Filter>
+    </Object>
+    <Object Include="C:\projects\chess_research\chess-engine\cpp\build_phase6a\mcts_engine.dir\$(Configuration)\thread_pool.obj">
+      <Filter>Object Libraries</Filter>
+    </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Object Libraries">
+      <UniqueIdentifier>{9C67F054-CFC0-3AD9-94AE-4885C923C6F2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{0AD4B54E-32A6-35B2-BC50-F6BCFC7E726D}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

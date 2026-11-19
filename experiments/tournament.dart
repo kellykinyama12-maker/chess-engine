@@ -7,6 +7,7 @@ import 'package:chess_engine/src/eval.dart';
 import 'package:chess_engine/src/mcts.dart';
 import 'package:chess_engine/src/mcts_alphabeta.dart' show PriorPool;
 import 'package:chess_engine/src/mcts_hybrid.dart';
+import 'package:chess_engine/src/mcts_prior.dart';
 import 'package:chess_engine/src/mcts_new.dart' as mcts_new;
 import 'package:chess_engine/src/mcts_root.dart';
 import 'package:chess_engine/src/pure_mcts.dart';
@@ -57,6 +58,7 @@ Future<void> main(List<String> args) async {
     'pure-mcts',
     'tactical',
     'mcts-new',
+    'typed',
     'hybrid-mcts',
   ].contains(engine)) {
     throw ArgumentError(
@@ -88,6 +90,7 @@ Future<void> main(List<String> args) async {
     'pure-mcts' => 'pure MCTS, quiet depth $samples',
     'tactical' => 'tactical-probe negamax (search_tactical.dart)',
     'mcts-new' => 'MCTS with alpha-beta priors (mcts_new.dart), $samples ms per prior',
+    'typed' => 'MCTS with node-typed priors (mcts_prior.dart), $samples ms per prior',
     'hybrid-mcts' =>
       'alpha-beta for half the time, then MCTS to refute its move (mcts_hybrid.dart), $samples ms per prior',
     _ => 'negamax max / MCTS min, $samples samples',
@@ -194,6 +197,8 @@ Future<GameResult> _playGame(
         workers = v;
       case 'm':
         marginCp = v;
+      case 't':
+        ttLookup = v != 0;
       case 'a':
         tactical.adaptiveSearch = v != 0;
       case 'r':
@@ -222,13 +227,26 @@ Future<GameResult> _playGame(
   final pool = engine.contains('mcts') && workers > 1
       ? await PriorPool.spawn(workers)
       : null;
+  final typedPool = engine == 'typed' && workers > 1
+      ? await TypedPriorPool.spawn(workers)
+      : null;
   var overrides = 0;
 
   while (!chess.game_over &&
       (maxPlies <= 0 || chess.history.length < maxPlies)) {
     final Move move;
     if (chess.turn == hybridColor) {
-      if (engine == 'hybrid-mcts') {
+      if (engine == 'typed') {
+        final mc = TypedMonteCarlo()
+          ..typedPool = typedPool
+          ..position = chess
+          ..maxSimulations = 1 << 30
+          ..timeLimit = timeLimit
+          ..priorTimeLimit = Duration(milliseconds: samples);
+        await mc.simulate();
+        move = mc.emitPv()[0].move;
+        hybridDepths.add(mc.numOfSimulations);
+      } else if (engine == 'hybrid-mcts') {
         final mc = mcts_new.MonteCarlo()
           ..position = chess
           ..priorTimeLimit = Duration(milliseconds: samples)
@@ -308,6 +326,7 @@ Future<GameResult> _playGame(
     chess.move(move);
   }
   pool?.close();
+  typedPool?.close();
 
   GameResult done(String result, String reason) => (
     game: game,
